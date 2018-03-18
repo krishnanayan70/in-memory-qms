@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>QMS - Consumer</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.5/angular.min.js"></script>
+</head>
+
+<body ng-app="qms">
+Consumer Subscription:
+	<div ng-controller="ConsumerController" >
+	    <form ng-submit="subscribe()">
+	        <input type="text" name="name" ng-model="consumer.name"> Consumer Name <br/>
+	        <input type="text" name="topic"  ng-model="consumer.topic"> Expression to be matched with messages <br/>
+	        <input type="text" name="callback_url"  ng-model="consumer.callback_url"> Callback URL <br/>
+	        <input type="submit" value="Submit" class="btn btn-primary">
+	    </form>
+		
+	</div>
+	
+	<div>{{message}}</div>
+
+	<script>
+	    angular.module("qms", [])
+	            .controller("ConsumerController", function($scope, $http) {
+	                $scope.consumer = {};
+	                $scope.consumer.name = "C";
+	                $scope.consumer.topic  = "xyz";
+	                $scope.consumer.callback_url = "/consume";
+	                $scope.message="";
+	                $scope.subscribe = function(){
+		                	var data = {
+		            				name : $scope.consumer.name,
+		            				topic : $scope.consumer.topic,
+		            				callbackUrl : $scope.consumer.callback_url,
+		            				dependencies : []
+		            		};	
+		            		var res = $http.post('/consumer/subscribe', data);
+		            		res.success(function(data, status, headers, config) {
+		            			$scope.message = data;
+		            		});
+		            		res.error(function(data, status, headers, config) {
+		            			alert( "failure message: " + JSON.stringify({data: data}));
+		            		});
+	                }
+	            } );
+	</script>
+
+</body>
+</html>
