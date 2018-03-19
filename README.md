@@ -1,5 +1,4 @@
-#queueing-system
-In Memory Queueing Stystem
+#in memory queueing-system
 
 Problem statement: *Design an efficient in-memory queueing system with low latency requirements Functional specification:*
 
@@ -21,19 +20,20 @@ Problem statement: *Design an efficient in-memory queueing system with low laten
 	
 **Set Up:**
 
-	1. Install MongoDB
-	2. Start mongoDB and create db "qms" and collection "consumers".
-	3. Install and start Redis
+	1. Install Java
+	2. Install MongoDB
+	3. Start mongoDB and create db "qms" and collection "consumers".
+	4. Install and start Redis
 	
 **APIs**
 
 	1. /consumer/subscribe
 		POST
-		url : /consumer/subscrib
+		url : /consumer/subscribe
 		body:
 		{
 			"name":"C",
-			"topic":"sql",
+			"topic":"pat",
 			"callbackUrl":"/consume",
 			"dependencies":["A","B"]
 		}
@@ -49,8 +49,8 @@ Problem statement: *Design an efficient in-memory queueing system with low laten
 	4. /publish
 		POST
 		body : {
-					"topic":"sql",
-					"content":"mysql-content"
+					"topic":"pat",
+					"content":"some content"
 				}
 
 
