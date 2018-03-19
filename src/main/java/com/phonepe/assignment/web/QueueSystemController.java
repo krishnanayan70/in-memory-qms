@@ -22,7 +22,7 @@ public class QueueSystemController {
 	@PostMapping("/consumer/subscribe")
 	public @ResponseBody String subscribe(@RequestBody Consumer consumer) {
 		queueService.getConsumerRepository().addConsumer(consumer);
-		return "Successfully subscribed";
+		return "Subscription successful for consumer " + consumer;
 	}
 	
 	@PostMapping("/consumer/{consumer}/add_dependency")
@@ -32,13 +32,15 @@ public class QueueSystemController {
 	
 	@PostMapping("/config/{name}/{value}")
 	public @ResponseBody String configure(@PathVariable("name") String name, @PathVariable("value") String value) {
-		Integer newValue = Integer.parseInt(value);
+		long newValue = Long.parseLong(value);
 		if("size".equals(name)) {
 			queueService.setSize(newValue);
 		}else if("retry".equals(name)) {
-			queueService.setRetry(newValue);
+			queueService.setRetry((int)newValue);
+		}else {
+			return "Invalid configuration provided.";
 		}
-		return "Updated config => Name: " + name+", Value: " + value;
+		return "Successfully updated config";
 	}
 	
 	@PostMapping("/publish")
@@ -46,10 +48,10 @@ public class QueueSystemController {
 		return queueService.addMessage(message);
 	}
 	
-	@PostMapping("/consumes")
-	public @ResponseBody String consume(@RequestBody String message) {
-		System.out.println("Message Recieved : "+message);
-		return "Successfully consumed.";
-	}
+//	@PostMapping("/consumes") //To check callback url invocation and retry mechanism
+//	public @ResponseBody String consume(@RequestBody String message) {
+//		System.out.println("Message Recieved : "+message);
+//		return "Successfully consumed.";
+//	}
 
 }

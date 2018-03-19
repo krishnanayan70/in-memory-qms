@@ -44,10 +44,10 @@ public class Digraph<V> {
     
     public Map<V,Integer> inDegree () {
         Map<V,Integer> result = new HashMap<V,Integer>();
-        for (V v: neighbors.keySet()) result.put(v, 0);       // All in-degrees are 0
+        for (V v: neighbors.keySet()) result.put(v, 0);
         for (V from: neighbors.keySet()) {
             for (V to: neighbors.get(from)) {
-                result.put(to, result.get(to) + 1);           // Increment in-degree
+                result.put(to, result.get(to) + 1);
             }
         }
         return result;
@@ -55,30 +55,22 @@ public class Digraph<V> {
     
     public List<V> topSort () {
         Map<V, Integer> degree = inDegree();
-        // Determine all vertices with zero in-degree
-        Stack<V> zeroVerts = new Stack<V>();        // Stack as good as any here
+        Stack<V> zeroVerts = new Stack<V>();
         for (V v: degree.keySet()) {
             if (degree.get(v) == 0) zeroVerts.push(v);
         }
-        // Determine the topological order
+        
         List<V> result = new ArrayList<V>();
         while (!zeroVerts.isEmpty()) {
-            V v = zeroVerts.pop();                  // Choose a vertex with zero in-degree
-            result.add(v);                          // Vertex v is next in topol order
-            // "Remove" vertex v by updating its neighbors
+            V v = zeroVerts.pop();
+            result.add(v);
             for (V neighbor: neighbors.get(v)) {
                 degree.put(neighbor, degree.get(neighbor) - 1);
-                // Remember any vertices that now have zero in-degree
                 if (degree.get(neighbor) == 0) zeroVerts.push(neighbor);
             }
         }
-        // Check that we have used the entire graph (if not, there was a cycle)
         if (result.size() != neighbors.size()) return null;
         return result;
-    }
-    
-    public boolean isDag () {
-        return topSort() != null;
     }
 
 }

@@ -14,14 +14,6 @@ public class Message implements Serializable{
 	public Message() {
 	}
 	
-	public Message(String message) {
-		String[] m = message.split(",");
-		if(m.length == 2) {
-			this.topic = m[0].split("=")[1];
-			this.content = m[1].split("=")[1];
-		}
-	}
-
 	public String getTopic() {
 		return topic;
 	}

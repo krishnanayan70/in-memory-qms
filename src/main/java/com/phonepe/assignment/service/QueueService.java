@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import org.apache.commons.logging.Log;
@@ -31,9 +32,10 @@ public class QueueService {
 	
 	private static final Log log = LogFactory.getLog(QueueService.class);
 	private static final int DEFAULT_TIMEOUT = 500;
+	private static final int CONCURRENT_CONSUMING = 2;
 	private static final String QUEUE_NAME = "messages";
 	private static Long messageCount = new Long(0);
-	private static Integer size = new Integer(10);
+	private static Long size = new Long(10);
 	
 	@Resource(name="redisTemplate")
 	private ListOperations<String, Message> listOps;
@@ -43,10 +45,15 @@ public class QueueService {
 	private RetryTemplate retryTemplate;
 	private RestTemplate restTemplate;
 	private ExecutorService executorService;
-
+	
 	public QueueService() {
 		this.restTemplate = new RestTemplate();
-		this.executorService = Executors.newFixedThreadPool(2);
+		this.executorService = Executors.newFixedThreadPool(CONCURRENT_CONSUMING);
+	}
+	
+	@PostConstruct
+	public void init() {
+		QueueService.messageCount = listOps.size(QUEUE_NAME);
 		this.processMessage();
 	}
 	
@@ -56,27 +63,30 @@ public class QueueService {
 				if(messageCount.equals(size))
 					return "Queue is full.";
 				messageCount = listOps.rightPush(QUEUE_NAME, message);
+				log.info("Message: "+message+" added to queue. Total count: "+messageCount);
 				return "Message added to Queue.";
 			}
 		}
 	}
 	
 	private void processMessage() {
-		for(int i=0;i<2;i++)
+		for(int i=0;i<CONCURRENT_CONSUMING;i++)
 			executorService.submit(new Runnable() {
 				
 				@Override
 				public void run() {
 					while(true) {
-						Message m = listOps.leftPop(QUEUE_NAME, DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS);
-						if(m != null) {
-							List<Consumer> consumers = getSequenceForConsumption(consumerRepo.getConsumersForTopic(m.getTopic()));
-							for(int i=consumers.size()-1;i>=0;i--) {
-								invokeCallbackUrls(consumers.get(i), m);
-							}
-							synchronized (messageCount) {
-								if(messageCount > 0)
-									messageCount--;
+						if(listOps != null) {
+							Message m = listOps.leftPop(QUEUE_NAME, DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS);
+							if(m != null) {
+								List<Consumer> consumers = getSequenceForConsumption(consumerRepo.getConsumersForTopic(m.getTopic()));
+								for(int i=consumers.size()-1;i>=0;i--) {
+									invokeCallbackUrls(consumers.get(i), m);
+								}
+								synchronized (messageCount) {
+									if(messageCount > 0)
+										messageCount--;
+								}
 							}
 						}
 					}
@@ -117,7 +127,7 @@ public class QueueService {
 		retryTemplate.setRetryPolicy(new SimpleRetryPolicy(retry));
 	}
 	
-	public void setSize(int newSize) {
+	public void setSize(long newSize) {
 		synchronized (size) {
 			size = newSize;
 		}
